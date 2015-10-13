@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
     <script src="reactive.js"></script>
     <script src="reactive.dom.js"></script>
@@ -11,6 +12,11 @@
     <title>Spreadsheet</title>
 </head>
 <body>
+<div class="btn-group" id = "header">
+    <button class="btn btn-default" id = "export" title="Export to CSV"><span class="glyphicon glyphicon-export"></span></button>
+    <button class="btn btn-default" id = "bold" title="Bold font"><span class="glyphicon glyphicon-bold"></span></button>
+    <button class="btn btn-default" id = "italic" title="Italic font"><span class="glyphicon glyphicon-italic"></span></button>
+</div>
 <table class = "r"></table>
 <p></p>
 <button id = "add">Додати</button> таку кількість рядків знизу: <input class = "brd-input" type = "text" value = "10">

@@ -1,11 +1,11 @@
 window.modeApp = 'view';
 
 window.addEventListener("load", function () {
-
-    for (var i = 0; i < 6; i++) {
-        var row = document.querySelector("table").insertRow(-1);
-        for (var j = 0; j < 15; j++) {
-            var letter = String.fromCharCode("A".charCodeAt(0) + j - 1);
+var row, letter
+    for (var i = 0; i < 10; i++) {
+        row = document.querySelector("table").insertRow(-1);
+        for (var j = 0; j < 20; j++) {
+            letter = String.fromCharCode("A".charCodeAt(0) + j - 1);
             row.insertCell(-1).innerHTML = i && j ? "<input id = '" + letter + i + "' class = 'view'/>" : i || ((letter != "@") ? letter : '');
         }
     }
@@ -17,18 +17,23 @@ window.addEventListener("load", function () {
         mainApp(inputs[k])
     }
 
-    function mainApp(elm){
+    function mainApp(elm) {
         //var elm = inputs[k]
         var obj = {}
+        obj.format = {
+            fontWeight: "normal",
+            fontStyle: "normal"
+        }
         obj.formula = ""
         obj.rState = $R.state([''])
         obj.rFunction = $R(function () {
             var seq_out = arguments[0]
-            var cells = getCellNames(seq_out)
             var stack = []
+            var isFormula = (seq_out.length > 1)
+            var cells = getCellNames(seq_out)
             var operators = {'^': 1, '%': 2, '*': 3, '/': 3, '+': 4, '-': 4, '(': 5, ')': 5}
 
-            for (var i = 0; i < seq_out.length; i++) {
+            for (var i = isFormula + 0; i < seq_out.length; i++) {
                 var c = seq_out[i]
                 if (operators[c]) {
                     var t = stack.pop()
@@ -67,13 +72,12 @@ window.addEventListener("load", function () {
                 else if (!isNaN(c)) {
                     stack.push((c.indexOf('.') != -1) ? parseFloat(c) : parseInt(c))
                 }
-                else if (sheet[c]) {
+                else if (isFormula && sheet[c]) {
                     stack.push(arguments[cells.indexOf(c) + 1])
                 }
                 else {
-                    console.log('error')
+                    stack.push(c)
                 }
-
             }
 
             return stack[0]
@@ -83,9 +87,16 @@ window.addEventListener("load", function () {
         $R.dom(elm).bindAttributeTo("value", obj.rFunction);
         //$('table').find(elm)
         $(elm).on("change", function () {
+            this.value = this.value.replace(/\s+$/, '')
             sheet[this.id].formula = this.value
-            var seqOut = parser(this.value)
-            var cellNames = getCellNames(seqOut)
+            if (this.value[0] == '=') {
+                var seqOut = parser(this.value)
+                var cellNames = getCellNames(seqOut)
+            }
+            else {
+                var seqOut = [this.value]
+                var cellNames = []
+            }
             var toBind = [sheet[this.id].rState]
             for (var i = 0; i < cellNames.length; i++) {
                 toBind.push(sheet[cellNames[i]].rFunction)
@@ -94,6 +105,9 @@ window.addEventListener("load", function () {
             sheet[this.id].rState.set(seqOut)
         })
         elm.readOnly = true
+        elm.onfocus = function(e) {
+            window.lastElement = e.target
+        }
         elm.onblur = function (e) {
             e.target.className = 'view'
             e.target.readOnly = true
@@ -129,7 +143,6 @@ window.addEventListener("load", function () {
                 e.target.className = 'edit'
                 e.target.value = sheet[e.target.id].formula
                 window.modeApp = "edit"
-                console.log('ok')
             }
         }
 
@@ -145,7 +158,7 @@ window.addEventListener("load", function () {
         var varb = ''   // variable in formula
         var dot = false //for decimal point
 
-        for (var i = 0; i < formula.length; i++) {
+        for (var i = 1; i < formula.length; i++) {
             var c = formula[i]
             if (c === ' ') {
                 if (dig.length != 0) {
@@ -222,7 +235,7 @@ window.addEventListener("load", function () {
         }
 
         var stack = []
-        var seq_out = []
+        var seq_out = ['=']
 
         for (var i = 0; i < seq_in.length; i++) {
             var c = seq_in[i]
@@ -266,6 +279,8 @@ window.addEventListener("load", function () {
         return cellNames
     }
 
+//  button-events
+
     $('#add').click(function () {
         var prevTableLength = inputs.length
         var numRows = parseInt($('input.brd-input').val());
@@ -273,11 +288,13 @@ window.addEventListener("load", function () {
 
         for (var i = 0; i < numRows; i++) {
             var row = document.querySelector("table").insertRow(-1);
-            for (var j = 0; j < 15; j++) {
+            for (var j = 0; j < 20; j++) {
                 var letter = String.fromCharCode("A".charCodeAt(0) + j - 1);
                 var r_i = rows + i;
                 row.insertCell(-1).innerHTML = j ? "<input id='" + letter + r_i + "'+ class = 'view'/>" : rows + i;
-                if (j){inputs.push(document.querySelector("#" + letter + r_i))}
+                if (j) {
+                    inputs.push(document.querySelector("#" + letter + r_i))
+                }
             }
         }
 
@@ -285,6 +302,83 @@ window.addEventListener("load", function () {
             mainApp(inputs[k])
         }
 
+    })
+    $('#export').click(function () {
+        var maxRow = 0
+        var maxCol = 0
+        var row, col
+        for (var k = 0; k < inputs.length; k++) {
+            if (sheet[inputs[k].id].formula != '') {
+                col = /\D+/.exec(inputs[k].id)[0].charCodeAt() - 65
+                row = parseInt(/\d+/.exec(inputs[k].id)[0]) - 1
+                if (col > maxCol) {
+                    maxCol = col
+                }
+                if (row > maxRow) {
+                    maxRow = row
+                }
+
+            }
+        }
+        var data = new Array(maxRow + 1)
+        var id
+        for (var i = 0; i < maxRow + 1; i++) {
+            var dataRow = new Array(maxCol + 1)
+            for (k = 0; k < maxCol + 1; k++) {
+                id = String.fromCharCode(k + 65) + (i + 1)
+                if (sheet[id].formula == '') {
+                    dataRow[k] = ''
+                }
+                else {
+                    dataRow[k] = sheet[id].rFunction()
+                }
+            }
+            console.log(dataRow)
+            data[i] = dataRow
+        }
+        var csvContent = "data:text/csv;charset=utf-8,";
+        data.forEach(function(infoArray, index){
+
+            dataString = "'" + infoArray.join("','") + "'";
+            csvContent += index < data.length ? dataString+ '\n' : dataString;
+
+        });
+
+        var encodedUri = encodeURI(csvContent);
+        var link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "export.csv");
+        link.click();
+
+    })
+    var elId = 'A1'
+    $('#bold').click(function (){
+        if (window.lastElement) {
+            elId = window.lastElement.id
+        }
+        if (sheet[elId].format.fontWeight == "normal") {
+            $("#" + elId).css("font-weight", "bold")
+            sheet[elId].format.fontWeight = "bold"
+        }
+        else{
+            $("#" + elId).css("font-weight", "normal")
+            sheet[elId].format.fontWeight = "normal"
+        }
+    })
+
+    $('#italic').click(function (){
+        if (window.lastElement) {
+            elId = window.lastElement.id
+        }
+
+        if (sheet[elId].format.fontStyle == "normal") {
+            $("#" + elId).css("font-style", "italic")
+            sheet[elId].format.fontStyle = "italic"
+        }
+        else{
+            $("#" + elId).css("font-style", "normal")
+            sheet[elId].format.fontStyle = "normal"
+        }
     })
 
 })
@@ -338,3 +432,23 @@ function focusMe(input, key) {
     if (!needFocusElement) return;
     needFocusElement.focus();
 }
+$(function(){
+    $(window).scroll(function() {
+        var top = $(document).scrollTop();
+        var left = $(document).scrollLeft();
+        if (top < 10 && left >= 10) {
+            $("#header").css({top: '10', left: '10', position: 'fixed'});
+        }
+        else if (top >= 10) {
+            $("#header").css({top: '10px', position: 'fixed'})
+        }
+        else if (left < 10 && top < 10) {
+            $("#header").css({top: '0', position: 'relative'});
+
+        }
+        else if(left >= 10 && top < 10) {
+            $("#header").css({left: '10px', position: 'fixed'});
+        }
+
+    });
+});
