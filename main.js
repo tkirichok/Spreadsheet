@@ -10,8 +10,8 @@ window.addEventListener("load", function () {
         }
     }
 
-    var inputs = [].slice.call(document.querySelectorAll("td > input")) // массив инпутов в ячейках
-    var sheet = {}  // объект содержащий состояние таблицы (формулы, формат)
+    var inputs = [].slice.call(document.querySelectorAll("td > input")) // РјР°СЃСЃРёРІ РёРЅРїСѓС‚РѕРІ РІ СЏС‡РµР№РєР°С…
+    var sheet = {}  // РѕР±СЉРµРєС‚ СЃРѕРґРµСЂР¶Р°С‰РёР№ СЃРѕСЃС‚РѕСЏРЅРёРµ С‚Р°Р±Р»РёС†С‹ (С„РѕСЂРјСѓР»С‹, С„РѕСЂРјР°С‚)
 
     for (var k = 0; k < inputs.length; k++) {
         mainApp(inputs[k])
@@ -25,13 +25,13 @@ window.addEventListener("load", function () {
         }
         obj.formula = ""
         obj.rState = $R.state([''])
-        obj.rFunction = $R(function () {  // реактивная функция, которая возвращает значение в ячейке
+        obj.rFunction = $R(function () {  // СЂРµР°РєС‚РёРІРЅР°СЏ С„СѓРЅРєС†РёСЏ, РєРѕС‚РѕСЂР°СЏ РІРѕР·РІСЂР°С‰Р°РµС‚ Р·РЅР°С‡РµРЅРёРµ РІ СЏС‡РµР№РєРµ
             var seq_out = arguments[0]
             var stack = []
             var isFormula = (seq_out.length > 1)
-            var cells = getCellNames(seq_out) // массив зависимостей (ячеек)
+            var cells = getCellNames(seq_out) // РјР°СЃСЃРёРІ Р·Р°РІРёСЃРёРјРѕСЃС‚РµР№ (СЏС‡РµРµРє)
             var operators = {'^': 1, '%': 2, '*': 3, '/': 3, '+': 4, '-': 4, '(': 5, ')': 5}
-            //в цикле вычисляется по стеку, сформированному парсером формулы (обратная польская запись)
+            //РІ С†РёРєР»Рµ РІС‹С‡РёСЃР»СЏРµС‚СЃСЏ РїРѕ СЃС‚РµРєСѓ, СЃС„РѕСЂРјРёСЂРѕРІР°РЅРЅРѕРјСѓ РїР°СЂСЃРµСЂРѕРј С„РѕСЂРјСѓР»С‹ (РѕР±СЂР°С‚РЅР°СЏ РїРѕР»СЊСЃРєР°СЏ Р·Р°РїРёСЃСЊ)
             for (var i = isFormula + 0; i < seq_out.length; i++) {
                 var c = seq_out[i]
                 if (operators[c]) {
@@ -96,7 +96,7 @@ window.addEventListener("load", function () {
         $R.dom(elm).bindAttributeTo("value", obj.rFunction);
         //$('table').find(elm)
 
-        $(elm).on("change", function () {// устанавливаются новые зависимости между ячейками и запускается процесс вычисления
+        $(elm).on("change", function () {// СѓСЃС‚Р°РЅР°РІР»РёРІР°СЋС‚СЃСЏ РЅРѕРІС‹Рµ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РјРµР¶РґСѓ СЏС‡РµР№РєР°РјРё Рё Р·Р°РїСѓСЃРєР°РµС‚СЃСЏ РїСЂРѕС†РµСЃСЃ РІС‹С‡РёСЃР»РµРЅРёСЏ
             var seqOut, cellNames
             this.value = this.value.replace(/\s+$/, '')
             sheet[this.id].formula = this.value
@@ -163,7 +163,7 @@ window.addEventListener("load", function () {
         }
     }
 
-//функция преобразовует формулу в обратную польскую запись, используется алгоритм сортировочной станции
+//С„СѓРЅРєС†РёСЏ РїСЂРµРѕР±СЂР°Р·РѕРІСѓРµС‚ С„РѕСЂРјСѓР»Сѓ РІ РѕР±СЂР°С‚РЅСѓСЋ РїРѕР»СЊСЃРєСѓСЋ Р·Р°РїРёСЃСЊ, РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ Р°Р»РіРѕСЂРёС‚Рј СЃРѕСЂС‚РёСЂРѕРІРѕС‡РЅРѕР№ СЃС‚Р°РЅС†РёРё
     function parser(formula) {
         var operators = {'^': 1, '%': 2, '*': 3, '/': 3, '+': 4, '-': 4, '(': 5, ')': 5}
 
@@ -410,7 +410,7 @@ window.addEventListener("load", function () {
 
 })
 
-// обработка переключения между ячейками с помощью клавиатуры
+// РѕР±СЂР°Р±РѕС‚РєР° РїРµСЂРµРєР»СЋС‡РµРЅРёСЏ РјРµР¶РґСѓ СЏС‡РµР№РєР°РјРё СЃ РїРѕРјРѕС‰СЊСЋ РєР»Р°РІРёР°С‚СѓСЂС‹
 window.document.onkeydown = function (event) {
     if (window.modeApp == 'view') {
         startRefocus(event);
